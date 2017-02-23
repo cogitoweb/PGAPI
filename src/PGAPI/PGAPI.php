@@ -115,7 +115,7 @@ namespace PGAPI {
 
         private function UpdateCookies()
         {
-            $aCookies = glob("Cookies/*.txt");
+            $aCookies = glob(__DIR__."/cookie_*.txt");
             $n = count($aCookies);
             $sCombined = "";
             if ($n !== 0) {
@@ -137,7 +137,7 @@ namespace PGAPI {
             $counter = 0;
             while ($counter <= $n) {
                 if (preg_match('@Set-Cookie: (([^=]+)=[^;]+)@i', $aRH["$counter"], $matches)) {
-                    $fp = fopen('Cookies/' . $matches["2"] . '.txt', 'w');
+                    $fp = fopen(__DIR__.'cookie_' . $matches["2"] . '.txt', 'w');
                     fwrite($fp, $matches["1"]);
                     fclose($fp);
                 }
