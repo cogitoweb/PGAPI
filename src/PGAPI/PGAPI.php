@@ -28,6 +28,13 @@ namespace PGAPI {
         protected $page;
         protected $risultato = array();
 
+        public static function search($query, $where = null, $page = 1)
+        {
+            $query = $query.($where ? "/$where" : '');
+            $service = new static($query, $page);
+            return $service;
+        }
+
         protected function getContents($sURL)
         {
 
@@ -107,9 +114,7 @@ namespace PGAPI {
             $query = trim(str_replace(' ', '%20', $query)) . '/p-' . $this->page;;
             $this->query = $query;
             if ($query) {
-                // 50 is the upper limit for the number of returned results
                 $this->url = $this->base_url . $query . '?mr=50';
-                echo $this->getResult();
             }
         }
 
