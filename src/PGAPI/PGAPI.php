@@ -1,32 +1,4 @@
 <?php
-function UpdateCookies() {
-    $aCookies = glob("Cookies/*.txt");
-    $n = count($aCookies);
-    $sCombined = "";
-    if ($n !== 0) {
-        $counter = 0;
-        
-        while ($counter < $n) {
-            $sCombined .= file_get_contents($aCookies["$counter"]) . ';';
-            ++$counter;
-        }
-    return $sCombined;
-    } else {
-        return $n;
-    }
-}
-function SaveCookies($aRH) {
-    $n = count($aRH); // Number of Pieces
-    $counter = 0;
-    while ($counter <= $n) {
-        if(preg_match('@Set-Cookie: (([^=]+)=[^;]+)@i', $aRH["$counter"], $matches)) {
-            $fp = fopen('Cookies/'.$matches["2"].'.txt', 'w');
-            fwrite($fp, $matches["1"]);
-            fclose($fp);
-        }
-        ++$counter;
-    }
-}
 
 class PGAPI{
     protected $base_url = "http://www.paginegialle.it/ricerca/";
@@ -55,7 +27,7 @@ class PGAPI{
     protected $risultato = array();
     protected function getContents($sURL){
         
-        $sCookie = UpdateCookies(); // Prepare cookies for deliverance
+        $sCookie = $this->UpdateCookies(); // Prepare cookies for deliverance
 
         $aHTTP['http']['method']          = 'GET';
         $aHTTP['http']['header']          = "User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.93 Safari/537.36\r\n";
@@ -68,7 +40,7 @@ class PGAPI{
         $context = stream_context_create($aHTTP);
         $html = mb_convert_encoding(file_get_contents($sURL, false, $context),"HTML-ENTITIES","UTF-8"); // Send the Request 
         $ResponseHeaders = $http_response_header;
-        SaveCookies($ResponseHeaders); // Saves cookies to cookie directory (if any).
+        $this->SaveCookies($ResponseHeaders); // Saves cookies to cookie directory (if any).
         return $html;
     }
     public function getResult(){
@@ -132,6 +104,36 @@ class PGAPI{
             echo $this->getResult();
         }
     }
+
+    private function UpdateCookies() {
+        $aCookies = glob("Cookies/*.txt");
+        $n = count($aCookies);
+        $sCombined = "";
+        if ($n !== 0) {
+            $counter = 0;
+
+            while ($counter < $n) {
+                $sCombined .= file_get_contents($aCookies["$counter"]) . ';';
+                ++$counter;
+            }
+            return $sCombined;
+        } else {
+            return $n;
+        }
+    }
+    private function SaveCookies($aRH) {
+        $n = count($aRH); // Number of Pieces
+        $counter = 0;
+        while ($counter <= $n) {
+            if(preg_match('@Set-Cookie: (([^=]+)=[^;]+)@i', $aRH["$counter"], $matches)) {
+                $fp = fopen('Cookies/'.$matches["2"].'.txt', 'w');
+                fwrite($fp, $matches["1"]);
+                fclose($fp);
+            }
+            ++$counter;
+        }
+    }
+
 }
 
 ?>

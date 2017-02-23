@@ -1,0 +1,8 @@
+{
+    "name": "pruiti/pgapi",
+    "autoload": {
+        "psr-4": {
+            "PGAPI\\": "src/PGAPI"
+        }
+    }
+}
