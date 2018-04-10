@@ -6,22 +6,19 @@ namespace PGAPI {
         protected $base_url = "http://www.paginegialle.it/ricerca/";
         protected $query = "";
         protected $url = "";
-        protected $nodexpath = "//div[contains(@class,\"vcard\")]";
-        protected $namexpath = ".//span[contains(@itemprop,\"name\")]/a";
-        protected $subtitlexpath = ".//span[@class=\"elementSubTitle\"]";
+        protected $nodexpath = "//section[contains(@class,\"vcard\")]";
+        protected $namexpath = ".//h1[contains(@itemprop,\"name\")]/a";
         protected $descriptionxpath = ".//div[@itemprop=\"description\"]";
-        protected $imagexpath = ".//img[@itemprop=\"image\"]/@src";
-        protected $addressxpath = ".//span[@itemprop=\"streetAddress\"]";
-        protected $postalcodexpath = ".//span[@itemprop=\"postalCode\"]";
-        protected $localityxpath = ".//span[@itemprop=\"addressLocality\"]";
-        protected $regionxpath = ".//span[@itemprop=\"addressRegion\"]";
+        protected $imagexpath = ".//img[@itemprop=\"image\"]";
+        protected $addressxpath = ".//span[contains(@class,\"street-address\")]";
+        protected $postalcodexpath = ".//span[contains(@class,\"postal-code\")]";
+        protected $localityxpath = ".//span[contains(@class,\"locality\")]";
+        protected $regionxpath = ".//span[contains(@class,\"region\")]";
         protected $statexpath = NULL;
-        protected $latitudexpath = ".//span[@itemprop=\"latitude\"]";
-        protected $longitudexpath = ".//span[@itemprop=\"longitude\"]";
-        protected $telephonexpath = ".//div[@itemprop=\"telephone\"]/span";
-        protected $websitexpath = ".//a[@class=\"elementLink\"]/@href";
+        protected $telephonexpath = ".//div[contains(@class,\"phoneNumbers\")]";
+        protected $websitexpath = ".//a[contains(@class,\"elementLink\")]/@href";
         protected $categoryxpath = ".//a[@class=\"cat\"]";
-        protected $categorynumberxpath = "substring(.//a[@class=\"cat\"]/@href,40)";
+        protected $categorynumberxpath = ".//a[@class=\"cat\"]/@href";
         protected $pagination = ".//a[@class=\"paginationBtn arrowBtn rightArrowBtn\"]";
         protected $nodi;
         protected $length = 0;
@@ -58,6 +55,7 @@ namespace PGAPI {
         public function getResult()
         {
             $html = $this->getContents($this->url);
+            // $html = $this->getContents('https://www.paginegialle.it/friuli%20venezia%20giulia/udine/alberghi.html');
             $dom = new DOMDocument();
             @$dom->loadHTML($html);
             $xpath = new DOMXPath($dom);
@@ -68,20 +66,18 @@ namespace PGAPI {
                 $this->nodi = $xpath->query($this->nodexpath);
                 foreach ($this->nodi as $row) {
                     $this->risultato["result"][$this->length]["name"] = (($xpath->query($this->namexpath, $row)->length > 0) ? trim($xpath->query($this->namexpath, $row)[0]->nodeValue) : NULL);
-                    $this->risultato["result"][$this->length]["subtitle"] = (($xpath->query($this->subtitlexpath, $row)->length > 0) ? trim($xpath->query($this->subtitlexpath, $row)[0]->nodeValue) : NULL);
                     $this->risultato["result"][$this->length]["description"] = (($xpath->query($this->descriptionxpath, $row)->length > 0) ? trim($xpath->query($this->descriptionxpath, $row)[0]->nodeValue) : NULL);
-                    $this->risultato["result"][$this->length]["image"] = (($xpath->query($this->imagexpath, $row)->length > 0) ? trim($xpath->query($this->imagexpath, $row)[0]->nodeValue) : NULL);
+                    $this->risultato["result"][$this->length]["image"] = (($xpath->query($this->imagexpath, $row)->length > 0) ? trim($xpath->query($this->imagexpath, $row)[0]->getAttribute('src')) : NULL);
                     $this->risultato["result"][$this->length]["place"]["address"] = (($xpath->query($this->addressxpath, $row)->length > 0) ? trim($xpath->query($this->addressxpath, $row)[0]->nodeValue) : NULL);
                     $this->risultato["result"][$this->length]["place"]["postal-code"] = (($xpath->query($this->postalcodexpath, $row)->length > 0) ? trim($xpath->query($this->postalcodexpath, $row)[0]->nodeValue) : NULL);
                     $this->risultato["result"][$this->length]["place"]["locality"] = (($xpath->query($this->localityxpath, $row)->length > 0) ? trim($xpath->query($this->localityxpath, $row)[0]->nodeValue) : NULL);
                     $this->risultato["result"][$this->length]["place"]["region"] = (($xpath->query($this->regionxpath, $row)->length > 0) ? trim($xpath->query($this->regionxpath, $row)[0]->nodeValue) : NULL);
                     $this->risultato["result"][$this->length]["place"]["state"] = "IT";
-                    $this->risultato["result"][$this->length]["place"]["latitude"] = (($xpath->query($this->latitudexpath, $row)->length > 0) ? trim($xpath->query($this->latitudexpath, $row)[0]->nodeValue) : NULL);
-                    $this->risultato["result"][$this->length]["place"]["longitude"] = (($xpath->query($this->longitudexpath, $row)->length > 0) ? trim($xpath->query($this->longitudexpath, $row)[0]->nodeValue) : NULL);
                     $this->risultato["result"][$this->length]["telephone"] = (($xpath->query($this->telephonexpath, $row)->length > 0) ? trim($xpath->query($this->telephonexpath, $row)[0]->nodeValue) : NULL);
                     $this->risultato["result"][$this->length]["website"] = (($xpath->query($this->websitexpath, $row)->length > 0) ? trim($xpath->query($this->websitexpath, $row)[0]->nodeValue) : NULL);
-                    $this->risultato["result"][$this->length]["category"] = (($xpath->query($this->categoryxpath, $row)->length > 0) ? trim($xpath->query($this->categoryxpath, $row)[0]->nodeValue) : NULL);
-                    $this->risultato["result"][$this->length]["category-number"] = (($xpath->query($this->categorynumberxpath, $row)->length > 0) ? trim($xpath->query($this->categorynumberxpath, $row)[0]->nodeValue) : NULL);
+                    $category = $xpath->query($this->categoryxpath,$row)[0];
+                    $this->risultato["result"][$this->length]["category"] = trim($category->nodeValue);
+                    $this->risultato["result"][$this->length]["category-number"] = substr($category->getAttribute('href'), strpos($category->getAttribute('href'), '/cat/') + 5);
 
                     $this->length++;
                 }
